@@ -1,0 +1,20 @@
+linters:
+  enable:
+    - gomodguard
+    - errorlint
+
+linters-settings:
+  gomodguard:
+    blocked:
+      modules:
+        - github.com/pkg/errors:
+            recommendations:
+              - errors
+              - fmt
+        - io/ioutil:
+            recommendations:
+              - io
+              - os
+
+run:
+  timeout: 15m

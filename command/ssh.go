@@ -5,6 +5,7 @@ package command
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net"
@@ -18,7 +19,6 @@ import (
 	"github.com/hashicorp/vault/builtin/logical/ssh"
 	"github.com/mitchellh/cli"
 	"github.com/mitchellh/mapstructure"
-	"github.com/pkg/errors"
 	"github.com/posener/complete"
 )
 
@@ -688,7 +688,7 @@ func (c *SSHCommand) generateCredential(username, ip string) (*api.Secret, *SSHC
 		"ip":       ip,
 	})
 	if err != nil {
-		return nil, nil, errors.Wrap(err, "failed to get credentials")
+		return nil, nil, fmt.Errorf("failed to get credentials: %w", err)
 	}
 	if secret == nil || secret.Data == nil {
 		return nil, nil, fmt.Errorf("vault returned empty credentials")
@@ -703,7 +703,7 @@ func (c *SSHCommand) generateCredential(username, ip string) (*api.Secret, *SSHC
 	// Use mapstructure to decode the response
 	var resp SSHCredentialResp
 	if err := mapstructure.Decode(secret.Data, &resp); err != nil {
-		return nil, nil, errors.Wrap(err, "failed to decode credential")
+		return nil, nil, fmt.Errorf("failed to decode credential: %w", err)
 	}
 
 	// Check for an empty key response
@@ -722,17 +722,17 @@ func (c *SSHCommand) writeTemporaryFile(name string, data []byte, perms os.FileM
 
 	f, err := ioutil.TempFile("", name)
 	if err != nil {
-		return "", errors.Wrap(err, "creating temporary file"), closer
+		return "", fmt.Errorf("creating temporary file: %w", err), closer
 	}
 
 	closer = func() error { return os.Remove(f.Name()) }
 
 	if err := ioutil.WriteFile(f.Name(), data, perms); err != nil {
-		return "", errors.Wrap(err, "writing temporary key"), closer
+		return "", fmt.Errorf("writing temporary key: %w", err), closer
 	}
 
 	if err := f.Close(); err != nil {
-		return "", errors.Wrap(err, "closing temporary key"), closer
+		return "", fmt.Errorf("closing temporary key: %w", err), closer
 	}
 
 	return f.Name(), nil, closer
@@ -873,10 +873,10 @@ func (c *SSHCommand) parseSSHCommand(args []string) (hostname string, username s
 
 	}
 	if hostname == "" {
-		return "", "", "", errors.Wrap(
-			err,
-			fmt.Sprintf("failed to find a hostname in ssh command %q", strings.Join(args, " ")),
-		)
+		if err != nil {
+			return "", "", "", fmt.Errorf("failed to find a hostname in ssh command %q: %w", strings.Join(args, " "), err))
+		}
+		return "", "", "", nil
 	}
 	return hostname, username, port, nil
 }
@@ -886,7 +886,7 @@ func (c *SSHCommand) resolveHostname(hostname string) (ip string, err error) {
 	// Vault only deals with IP addresses.
 	ipAddr, err := net.ResolveIPAddr("ip", hostname)
 	if err != nil {
-		return "", errors.Wrap(err, "failed to resolve IP address")
+		return "", fmt.Errorf("failed to resolve IP address: %w", err)
 	}
 	ip = ipAddr.String()
 	return ip, nil

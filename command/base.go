@@ -5,6 +5,7 @@ package command
 
 import (
 	"bytes"
+	"errors"
 	"flag"
 	"fmt"
 	"io"
@@ -20,7 +21,6 @@ import (
 	"github.com/hashicorp/vault/helper/namespace"
 	"github.com/mattn/go-isatty"
 	"github.com/mitchellh/cli"
-	"github.com/pkg/errors"
 	"github.com/posener/complete"
 )
 
@@ -93,7 +93,7 @@ func (c *BaseCommand) Client() (*api.Client, error) {
 	config := api.DefaultConfig()
 
 	if err := config.ReadEnvironment(); err != nil {
-		return nil, errors.Wrap(err, "failed to read environment")
+		return nil, fmt.Errorf("failed to read environment: %w", err)
 	}
 
 	if c.flagAddress != "" {
@@ -124,14 +124,14 @@ func (c *BaseCommand) Client() (*api.Client, error) {
 
 		// Setup TLS config
 		if err := config.ConfigureTLS(t); err != nil {
-			return nil, errors.Wrap(err, "failed to setup TLS config")
+			return nil, fmt.Errorf("failed to setup TLS config: %w", err)
 		}
 	}
 
 	// Build the client
 	client, err := api.NewClient(config)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to create client")
+		return nil, fmt.Errorf("failed to create client: %w", err)
 	}
 
 	// Turn off retries on the CLI
@@ -149,11 +149,11 @@ func (c *BaseCommand) Client() (*api.Client, error) {
 	if token == "" {
 		helper, err := c.TokenHelper()
 		if err != nil {
-			return nil, errors.Wrap(err, "failed to get token helper")
+			return nil, fmt.Errorf("failed to get token helper: %w", err)
 		}
 		token, err = helper.Get()
 		if err != nil {
-			return nil, errors.Wrap(err, "failed to get token from token helper")
+			return nil, fmt.Errorf("failed to get token from token helper: %w", err)
 		}
 	}
 

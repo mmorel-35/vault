@@ -5,6 +5,7 @@ package spanner
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"sync"
 	"time"
@@ -13,7 +14,6 @@ import (
 	metrics "github.com/armon/go-metrics"
 	uuid "github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/vault/sdk/physical"
-	"github.com/pkg/errors"
 	"google.golang.org/grpc/codes"
 )
 

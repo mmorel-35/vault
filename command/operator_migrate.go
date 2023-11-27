@@ -5,6 +5,7 @@ package command
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"math"
@@ -24,7 +25,6 @@ import (
 	"github.com/hashicorp/vault/sdk/physical"
 	"github.com/hashicorp/vault/vault"
 	"github.com/mitchellh/cli"
-	"github.com/pkg/errors"
 	"github.com/posener/complete"
 	"golang.org/x/sync/errgroup"
 )
